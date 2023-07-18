@@ -5,13 +5,7 @@ const app = express();
 
 const port = 3000;
 
-
-const UserData = {
-    firstName: "",
-    lastName: "",
-    userName: "",
-    password: "",
-}
+let isLoggedIn = false;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -20,8 +14,18 @@ app.post("/api/register", (req, res) => {
     const data = req.body;
 });
 
-app.post("/api/login", (req, res) => {
+app.get("/api/login", (req, res) => {
+    const data = req.body;
 
+    const email = data.email;
+    const password = data.password;
+
+    if (email == undefined || email == "") return
+    res.status(400).json({ message: "email cannnot be empty" });;
+    if (password == undefined || password == "") return
+    res.status(400).json({ message: "password cannot be empty" });;
+
+    res.status(200).json({ message: "Logged in successfuly" });
 });
 
 app.patch("/api/user/update", (req, res) => {
