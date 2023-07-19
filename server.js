@@ -94,7 +94,10 @@ app.patch("/api/user/update", checkAcess, async (req, res) => {
     }
     if (password !== "" && password !== undefined) {
         logger(password);
-        result = await UpdateUser(email, { password });
+        bcrypt.hash(password, saltRounds, async function (err, hash) {
+            logger(hash);
+            await UpdateUser(email, { password: hash });
+        });
     }
     if (picture !== "" && picture !== undefined) {
         logger(picture);
