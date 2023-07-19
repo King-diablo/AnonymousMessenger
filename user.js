@@ -30,7 +30,7 @@ async function CreateUser(email, password) {
 }
 
 
-async function FindUser(email, password) {
+async function FindUser(email, password, validator) {
 
     let status = {
         message: "valid user",
@@ -48,11 +48,8 @@ async function FindUser(email, password) {
         status.message = "user not found";
         return status;
     }
-    if (password == null || password == undefined || password != data?.password) {
-        status.value = false;
-        status.message = "password is incorrect";
-        return status;
-    }
+
+    validator(data.password);
 
     return status;
 }

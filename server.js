@@ -1,5 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 
 const client = require("./connection");
 const { User, CreateUser, FindUser, UpdateUser } = require("./user");
@@ -22,11 +24,26 @@ app.post("/api/register", async (req, res) => {
 
     validateDetail(email, res, password);
 
-    CreateUser(email, password);
+    bcrypt.genSalt(saltRounds, function (err, salt) {
+        if (err) {
+            logger(err);
+            res.status(400).json({ message: err })
+        }
+        logger(salt);
+        bcrypt.hash(password, salt, function (err, hash) {
+            if (err) {
+                logger(err);
+                res.status(400).json({ message: err })
+            }
+            logger(hash);
+            CreateUser(email, hash);
 
-    res.status(201).json({ message: "user created successfully" });
+            res.status(201).json({ message: "user created successfully" });
 
-    isLoggedIn = true;
+            isLoggedIn = true;
+        })
+    });
+
 });
 
 app.post("/api/login", (req, res) => {
@@ -36,16 +53,29 @@ app.post("/api/login", (req, res) => {
 
     validateDetail(email, res, password);
 
-    FindUser(email, password).then((result) => {
-        if (result.value === true) {
-            res.status(200).json({ message: "Logged in successfuly" });
-            isLoggedIn = true;
-
-        } else {
+    FindUser(email, password, validator).then((result) => {
+        if (result.value !== true) {
             res.status(400).json({ message: result.message });
-
         }
     });
+
+    function validator(hash) {
+        if (hash === undefined)
+            return res.status(400).json({ message: "user not found" });
+
+        bcrypt.compare(password, hash, function (err, result) {
+            if (err) {
+                res.status(400).json({ message: err });
+
+            }
+            if (result) {
+                isLoggedIn = true;
+                res.status(200).json({ message: "Logged in successfuly" });
+            } else {
+                res.status(400).json({ message: "incorrect password" });
+            }
+        })
+    }
 });
 
 app.patch("/api/user/update", checkAcess, async (req, res) => {
@@ -109,9 +139,9 @@ function checkAcess(req, res, next) {
 
 function validateDetail(email, password, res) {
     if (email == undefined || email == "")
-        res.status(400).json({ message: "email cannnot be empty" });
+        return res.status(400).json({ message: "email cannnot be empty" });
     if (password == undefined || password == "")
-        res.status(400).json({ message: "password cannot be empty" });
+        return res.status(400).json({ message: "password cannot be empty" });
 }
 /*
 TODO-> add database for user
