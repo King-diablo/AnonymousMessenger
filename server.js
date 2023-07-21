@@ -1,28 +1,35 @@
+const port = 3000;
+
+let isLoggedIn = false;
+
+
 const express = require("express");
+
 const bodyParser = require("body-parser");
+
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 
 const client = require("./connection");
-const { User, CreateUser, FindUser, UpdateUser } = require("./user");
+const { User, CreateUser, FindUser, UpdateUser, CreateMessage, GetMessages, ReportMessage } = require("./user");
 
 const app = express();
 
-const port = 3000;
-
-let isLoggedIn = true;
-
 app.use(bodyParser.urlencoded({ extended: true }));
 
-///Database server
-client;
+const userInfo = {
+    email: "",
+}
 
-app.post("/api/register", async (req, res) => {
+client.RunUserDB();
+
+app.post("/api/register", validateDetail, async (req, res) => {
     const data = req.body;
 
     const { email, password } = data;
 
-    validateDetail(email, res, password);
+    userInfo.email = email;
+    userInfo.password = password;
 
     bcrypt.genSalt(saltRounds, function (err, salt) {
         if (err) {
@@ -43,17 +50,17 @@ app.post("/api/register", async (req, res) => {
             isLoggedIn = true;
         })
     });
-
 });
 
-app.post("/api/login", (req, res) => {
+app.post("/api/login", validateDetail, async (req, res) => {
     const data = req.body;
 
     const { email, password } = data;
 
-    validateDetail(email, res, password);
+    userInfo.email = email;
+    userInfo.password = password;
 
-    FindUser(email, password, validator).then((result) => {
+    await FindUser(email, password, validator).then((result) => {
         if (result.value !== true) {
             res.status(400).json({ message: result.message });
         }
@@ -70,7 +77,7 @@ app.post("/api/login", (req, res) => {
             }
             if (result) {
                 isLoggedIn = true;
-                res.status(200).json({ message: "Logged in successfuly" });
+                res.status(200).json({ message: `Logged ${userInfo.email} in successfuly` });
             } else {
                 res.status(400).json({ message: "incorrect password" });
             }
@@ -111,16 +118,38 @@ app.patch("/api/user/update", checkAcess, async (req, res) => {
     res.status(200).json({ message: "profile updated", user: result.data, error: result.error });
 });
 
-app.post("/api/user/message", checkAcess, (req, res) => {
+app.post("/api/user/message", checkAcess, async (req, res) => {
+    const message = req.body.message;
+    const to = req.body.to;
+
+    const response = await CreateMessage(userInfo.email, to, message);
+
+    res.status(200).json({ response })
 });
 
-app.get("/api/user/inbox", checkAcess, (req, res) => {
+app.get("/api/user/inbox", checkAcess, async (req, res) => {
+    const response = await GetMessages(userInfo.email);
 
+    if (response.length == 0) {
+        res.status(200).json({ response: "no new mail" });
+    } else {
+        const msg = response.filter((data, index) => {
+            if (data.length >= 1) {
+                return data[index];
+            }
+        });
+        res.status(200).json(msg);
+    }
 });
 
-app.post("/api/user/report", checkAcess, (req, res) => {
+app.post("/api/user/report", checkAcess, async (req, res) => {
+    const id = req.body.id;
 
+    const response = await ReportMessage(id);
+
+    res.status(200).json({ response });
 });
+
 
 app.listen(port, () => {
     logger("listening on port " + port);
@@ -140,14 +169,15 @@ function checkAcess(req, res, next) {
 }
 
 
-function validateDetail(email, password, res) {
-    if (email == undefined || email == "")
-        return res.status(400).json({ message: "email cannnot be empty" });
-    if (password == undefined || password == "")
-        return res.status(400).json({ message: "password cannot be empty" });
+function validateDetail(req, res, next) {
+    if (email == undefined || email == "") {
+        res.status(400).json({ message: "email cannnot be empty" });
+        return next();
+    }
+    if (password == undefined || password == "") {
+        res.status(400).json({ message: "password cannot be empty" });
+        return next();
+    }
+    password = "";
+    next();
 }
-/*
-TODO-> add database for user
-TODO-> implement authentication, login and session management with password hashing and salting.
-TODO-> allow users to update their profile
-*/

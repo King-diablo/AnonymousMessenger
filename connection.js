@@ -1,15 +1,19 @@
 const mongoose = require("mongoose");
 
 const url = "mongodb://127.0.0.1:27017";
-const dbName = "records";
-const connectionString = url + "/" + dbName;
+const userDBName = "records";
+const connectionString = url + "/" + userDBName;
 
 
-const client = mongoose.connect(connectionString).then(() => {
-    console.log("Connected");
-}).catch((error) => {
-    console.log(error);
-})
+
+function RunUserDB() {
+    const client = mongoose.connect(connectionString).then(() => {
+        console.clear();
+        console.log("Connected to userDB");
+    }).catch((error) => {
+        console.log(error);
+    })
+}
 
 
-module.exports = { client }
+module.exports = { RunUserDB };
