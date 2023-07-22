@@ -16,7 +16,7 @@
 
 * clone this repo by running the command in your terminal.
   ```
-  git clone https://
+  git clone https://https://github.com/King-diablo/AnonymousMessenger.git
   ```
 
 * after thats done run the following commands:
