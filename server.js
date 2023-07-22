@@ -120,8 +120,22 @@ app.patch("/api/user/update", checkAcess, async (req, res) => {
 });
 
 app.post("/api/user/message", checkAcess, async (req, res) => {
-    const message = req.body.message;
-    const to = req.body.to;
+
+    const { message, to } = req.body;
+
+    if (to == "" || to == undefined) {
+        res.status(400).json({
+            message: "a reciver must be added",
+        });
+        return;
+    }
+
+    if (message == "" || message == undefined) {
+        res.status(400).json({
+            message: "the message must contain a value",
+        });
+        return;
+    }
 
     const response = await CreateMessage(userInfo.email, to, message);
 
