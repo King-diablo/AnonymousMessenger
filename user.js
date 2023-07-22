@@ -153,8 +153,6 @@ async function CreateUser(email, password) {
     });
 }
 
-
-
 async function FindUser(email, password, validator) {
 
     let status = {

@@ -28,9 +28,6 @@ app.post("/api/register", validateDetail, async (req, res) => {
 
     const { email, password } = data;
 
-    userInfo.email = email;
-    userInfo.password = password;
-
     bcrypt.genSalt(saltRounds, function (err, salt) {
         if (err) {
             logger(err);
@@ -53,12 +50,16 @@ app.post("/api/register", validateDetail, async (req, res) => {
 });
 
 app.post("/api/login", validateDetail, async (req, res) => {
+
+    if (res.message) {
+        const { message } = res;
+        logger(message);
+        res.status(400).json({ message });
+    }
+
     const data = req.body;
 
     const { email, password } = data;
-
-    userInfo.email = email;
-    userInfo.password = password;
 
     await FindUser(email, password, validator).then((result) => {
         if (result.value !== true) {
@@ -142,7 +143,7 @@ app.get("/api/user/inbox", checkAcess, async (req, res) => {
     }
 });
 
-app.post("/api/user/report", checkAcess, async (req, res) => {
+app.post("/api/user/report", Message, checkAcess, async (req, res) => {
     const id = req.body.id;
 
     const response = await ReportMessage(id);
@@ -170,14 +171,26 @@ function checkAcess(req, res, next) {
 
 
 function validateDetail(req, res, next) {
+    const { email, password } = req.body;
+
     if (email == undefined || email == "") {
-        res.status(400).json({ message: "email cannnot be empty" });
-        return next();
+        res.message = "email cannnot be empty";
+        res.status(400).json({ message: res.message });
+        logger(res.message);
+        return;
     }
+
     if (password == undefined || password == "") {
-        res.status(400).json({ message: "password cannot be empty" });
-        return next();
+        res.message = "password cannot be empty";
+        res.status(400).json({ message: res.message });
+        logger(res.message);
+        return
     }
-    password = "";
+
+    userInfo.email = email;
     next();
+}
+
+function Message(req, res, next) {
+    res.status(400).json({ message: "This route is underdevelopement" });
 }
