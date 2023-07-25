@@ -2,10 +2,11 @@
 
 1. Getting Started
 2. About the project
-3. Routes
-4. Stacks
-5. Important Note
-6. Feedback
+3. Project Structure
+4. Routes
+5. Stacks
+6. Important Note
+7. Feedback
 
 ### Getting Started
 
@@ -57,17 +58,27 @@
 this is a simple messaging api that can send and recive message between registered
 users.
 
+### Project Structure
+
+* src
+  * config
+  * controller
+  * helper
+  * middleware
+  * models
+  * routes
+
 ### Routes
   this routes can only be hit using postman or its alternative
 
 * root
   ```
-  https://localhost3000
+  https://localhost3000/api/v1
   ```
 
 * Register route
     ```
-    "api/register"
+    "/register"
     ```
     ```
     to register you need to pass in {email} and {password} to the body
@@ -75,7 +86,7 @@ users.
 
 * Login route
   ```
-  "/api/login"
+  "/login"
   ```
   ```
   to login you need to pass in {email} and {password} to the body
@@ -83,7 +94,7 @@ users.
 
 * User-Update route
   ```
-  "/api/user/update"
+  "/user/update"
   ```
 
   ```
@@ -100,7 +111,7 @@ users.
   ```
 * Message route
     ```
-    "api/user/message"
+    "/user/message"
     ```
 
     ```
@@ -111,7 +122,7 @@ users.
     ```
 * Inbox route
   ```
-  "/api/user/inbox"
+  "/user/inbox"
   ```
 
   ```
@@ -121,11 +132,12 @@ users.
   ```
 * Reporting-Message route
   ```
-  "/api/user/report"
+  "/user/report"
   ```
 
   ```
-  this link is broken and its still in developement
+  You will need the messageId passed into the body of the api to report the message.
+  if a message is reported 6 times it is automatically deleted
   ```
 ### Stacks
 this was built with
