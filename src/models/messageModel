@@ -1,0 +1,40 @@
+const mongoose = require("mongoose");
+
+const messageSchema = new mongoose.Schema({
+    messageId: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    userId: {
+        type: String,
+        required: true,
+    },
+    to: {
+        type: String,
+        required: true,
+    },
+    content: {
+        type: String,
+        required: true,
+    },
+    sent: {
+        type: Date,
+        default: Date.now
+    },
+    reportStatus: {
+        reportCount: {
+            type: Number,
+            default: 0
+        },
+        status: {
+            type: String,
+            default: "Good",
+        }
+    }
+});
+
+
+const Message = mongoose.model("message", messageSchema);
+
+module.exports = Message;
