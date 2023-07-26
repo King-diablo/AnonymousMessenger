@@ -139,12 +139,26 @@ users.
   You will need the messageId passed into the body of the api to report the message.
   if a message is reported 6 times it is automatically deleted
   ```
+
+* Delete-User route
+  ```
+  "/user/delete"
+  ```
+  ```
+  this requires email and password to be passed to the body
+  before the user can be deleted
+  ```
 ### Stacks
 this was built with
 * nodejs & expressjs
 * mongoosedb
 
 ### Important Note
+
+> environment variables needed
+> * *SALT_ROUNDS*
+> * *PORT*
+> * *DATABASE_URL*
 
 This project is far from complete as it's missing its most important feature that is
 the messaging feature.
