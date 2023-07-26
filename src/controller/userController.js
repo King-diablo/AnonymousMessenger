@@ -6,17 +6,17 @@ const Message = require('../models/messageModel');
 
 async function CreateMessage(from, to, content) {
 
-    const status = {
-        messageStatus: "message sent",
-        messageContent: ""
+    const result = {
+        status: "message sent",
+        message: ""
     }
     const reciver = await User.findOne({ email: to });
 
     if (!reciver) {
         console.log(reciver);
         console.log("user not found");
-        status.messageStatus = "did not send";
-        status.messageContent = "user not found";
+        result.status = "did not send";
+        result.message = "user not found";
         return;
     }
 
@@ -29,12 +29,13 @@ async function CreateMessage(from, to, content) {
         content,
     });
 
-    newMessage.save();
+    const messageMeta = await newMessage.save();
 
-    status.messageStatus = "message sent";
-    status.messageContent = "message was delivered";
+    result.status = "message sent";
+    result.message = "message was delivered";
+    result.data = messageMeta;
 
-    return status;
+    return result;
 }
 
 
@@ -42,11 +43,12 @@ async function CreateUser(email, password) {
 
     const newUser = new User({ userId: uuidv4(), email, password });
 
-    await newUser.save().then(() => {
-        console.log("user saved successfully");
-    }).catch((error) => {
-        console.log(error);
-    });
+    const result = await newUser.save();
+
+    return {
+        message: "user saved successfully",
+        result
+    }
 }
 
 async function FindUser(email, validator) {
@@ -65,12 +67,21 @@ async function FindUser(email, validator) {
         return status;
     }
 
-    validator(data.password);
 
     status.data = data;
+    status.hash = data.password;
+
+    validator(status.hash);
+
 
     return status;
 
+}
+
+async function DeleteUser(email) {
+    const response = await User.deleteOne({ email });
+
+    return response;
 }
 
 async function UpdateUser(email, request) {
@@ -88,4 +99,4 @@ async function UpdateUser(email, request) {
     return status;
 }
 
-module.exports = { CreateUser, FindUser, UpdateUser, CreateMessage };
+module.exports = { CreateUser, FindUser, UpdateUser, CreateMessage, DeleteUser };

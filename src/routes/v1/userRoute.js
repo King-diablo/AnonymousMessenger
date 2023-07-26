@@ -1,15 +1,16 @@
-
+require('dotenv').config();
 const express = require("express");
-const bcrypt = require('bcrypt');
+var expressValidations = require('express-validations');
 
 const userRouter = express.Router();
 
-const saltRounds = 10;
+const saltRounds = process.env.SALT_ROUNDS;
 
 
-const { CreateMessage, UpdateUser, FindUser } = require("../../controller/userController");
+const { CreateMessage, UpdateUser, FindUser, DeleteUser } = require("../../controller/userController");
 const { GetMessages, ReportMessage } = require("../../controller/messageController");
 const { checkAcess } = require("../../middleware/validation");
+const { Secure, Compare } = require("../../helper/password");
 
 const userInfo = {
     email: "",
@@ -20,27 +21,25 @@ userRouter.patch("/user/update", setUserInfo, checkAcess, async (req, res) => {
     const { firstName, lastName, userName, email, password, picture } = data
     let result = {}
 
-    if (firstName !== "" && firstName !== undefined) {
-        console.log(firstName);
+    if (expressValidations.isValidFirstname(firstName)) {
         result = await UpdateUser(email, { firstName });
     }
-    if (lastName !== undefined && lastName !== null) {
-        console.log(lastName);
+    if (expressValidations.isValidLastname(lastName)) {
         result = await UpdateUser(email, { lastName });
     }
-    if (password !== "" && password !== undefined) {
-        console.log(password);
-        bcrypt.hash(password, saltRounds, async function (err, hash) {
-            console.log(hash);
+    if (expressValidations.isStrongPassword(password)) {
+        await Secure(saltRounds, password, onError, onSucess);
+        function onError(err) {
+            res.status(404).json({ err });
+        }
+        async function onSucess(hash) {
             await UpdateUser(email, { password: hash });
-        });
+        }
     }
-    if (picture !== "" && picture !== undefined) {
-        console.log(picture);
+    if (expressValidations.isValidURL(picture)) {
         result = await UpdateUser(email, { picture });
     }
-    if (userName !== "" && userName !== undefined) {
-        console.log(userName);
+    if (expressValidations.isLength(userName, 6, 20)) {
         result = await UpdateUser(email, { userName });
     }
 
@@ -91,6 +90,41 @@ userRouter.post("/user/logout", setUserInfo, checkAcess, async (req, res) => {
     res.clearCookie("userInfo");
     res.status(200).json({ message: "logged out succesfully" });
     userInfo.email = "";
+})
+
+userRouter.post("/user/delete", checkAcess, async (req, res) => {
+    const { email, password } = req.body;
+
+    await FindUser(email, validator).then((result) => {
+        if (!result.value) {
+            res.status(400).json({ message: result.message });
+        }
+    });
+
+    async function validator(hash) {
+        if (hash === undefined) {
+            return res.status(400).json({ message: "user not found" });
+        }
+
+
+        Compare(password, hash, onError, onSucess);
+
+        function onError(err) {
+            res.status(400).json({ message: err });
+        }
+
+        async function onSucess(result) {
+            res.clearCookie("userInfo");
+            if (result) {
+                const response = await DeleteUser(email);
+                console.log(response);
+                res.status(200).json({ message: `user deleted successfuly` });
+            } else {
+                res.status(400).json({ message: "incorrect password" });
+
+            }
+        }
+    }
 })
 
 

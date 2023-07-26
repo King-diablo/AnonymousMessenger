@@ -32,7 +32,7 @@ app.post("/api/v1/register", validateDetail, async (req, res) => {
 
     const { email, password } = data;
 
-    const status = await Secure(saltRounds, password);
+    const status = await Secure(saltRounds, password, onError, onSucess);
 
     function onError() {
         console.log(err);
@@ -43,9 +43,7 @@ app.post("/api/v1/register", validateDetail, async (req, res) => {
         CreateUser(email, hash);
 
         res.status(201).json({ message: "user created successfully" });
-
-        isLoggedIn = true;
-        userInfo.email = email;
+        SaveSession(res, email);
     }
 
     if (status.result) {
@@ -76,7 +74,7 @@ app.post("/api/v1/login", validateDetail, async (req, res) => {
         }
 
 
-        const status = await Compare(password, hash, onError, onSucess);
+        Compare(password, hash, onError, onSucess);
 
         function onError(err) {
             res.status(400).json({ message: err });
@@ -85,11 +83,7 @@ app.post("/api/v1/login", validateDetail, async (req, res) => {
         function onSucess(result) {
             res.clearCookie("userInfo");
             if (result) {
-                isLoggedIn = true;
-                res.cookie("userInfo", {
-                    logInStatus: isLoggedIn,
-                    email: email,
-                }, { expire: 600000 + Date.now() });
+                SaveSession(res, email);
                 res.status(200).json({ message: `Logged ${email} in successfuly` });
             } else {
                 res.status(400).json({ message: "incorrect password" });
@@ -98,6 +92,15 @@ app.post("/api/v1/login", validateDetail, async (req, res) => {
         }
     }
 });
+
+
+function SaveSession(res, email) {
+    isLoggedIn = true;
+    res.cookie("userInfo", {
+        logInStatus: isLoggedIn,
+        email: email,
+    }, { expire: 600000 + Date.now() });
+}
 
 
 app.listen(port, () => {

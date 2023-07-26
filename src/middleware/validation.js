@@ -1,3 +1,4 @@
+var expressValidations = require('express-validations');
 
 function checkAcess(req, res, next) {
     const isLoggedIn = req.cookies?.userInfo?.logInStatus;
@@ -12,15 +13,15 @@ function checkAcess(req, res, next) {
 function validateDetail(req, res, next) {
     const { email, password } = req.body;
 
-    if (email == undefined || email == "") {
-        res.message = "email cannnot be empty";
+    if (!expressValidations.isValidEmail(email)) {
+        res.message = `${email} is not a valid email address`;
         res.status(400).json({ message: res.message });
         console.log(res.message);
         return;
     }
 
-    if (password == undefined || password == "") {
-        res.message = "password cannot be empty";
+    if (password === "" || password === undefined) {
+        res.message = "password cannot be null";
         res.status(400).json({ message: res.message });
         console.log(res.message);
         return
