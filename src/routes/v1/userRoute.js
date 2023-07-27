@@ -69,13 +69,47 @@ userRouter.post("/user/message", setUserInfo, checkAcess, async (req, res) => {
 });
 
 userRouter.get("/user/inbox", setUserInfo, checkAcess, async (req, res) => {
+
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
+    let msg = [];
     const response = await GetMessages(userInfo.email);
 
+
     if (response.message) {
-        res.status(200).json({ response: response.message });
-    } else {
-        res.status(200).json(response);
+        console.log(response.message);
+        return res.status(200).json({ response });
     }
+
+    const sortBy = req.query.sortBy;
+
+    if (sortBy === "newest") {
+        response.personalMessage.filter(message => {
+            if (message.sent.getFullYear() === year) {
+                if (message.sent.getMonth() === month) {
+                    if (message.sent.getDate() === day) {
+                        msg.unshift(message);
+                    }
+                }
+            }
+            msg.push(message);
+        });
+    } else if (sortBy === "oldest") {
+        response.personalMessage.map(message => {
+            if (message.sent.getFullYear() < year) {
+                if (message.sent.getMonth() < month) {
+                    if (message.sent.getDate() <= day) {
+                        msg.unshift(message);
+                    }
+                }
+            }
+            msg.push(message);
+        })
+    }
+
+    res.status(200).json({ msg });
 });
 
 userRouter.post("/user/report", setUserInfo, checkAcess, async (req, res) => {
@@ -92,7 +126,7 @@ userRouter.post("/user/logout", setUserInfo, checkAcess, async (req, res) => {
     userInfo.email = "";
 })
 
-userRouter.post("/user/delete", checkAcess, async (req, res) => {
+userRouter.delete("/user/delete", checkAcess, async (req, res) => {
     const { email, password } = req.body;
 
     await FindUser(email, validator).then((result) => {

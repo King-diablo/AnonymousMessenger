@@ -8,7 +8,6 @@ async function GetMessages(email) {
 
     const personalMessage = response.filter(message => {
         if (message.to === email) {
-            console.log(message);
             return message;
         }
     })

@@ -39,16 +39,16 @@ async function CreateMessage(from, to, content) {
 }
 
 
-async function CreateUser(email, password) {
+function CreateUser(email, password, onError, onSucess) {
 
     const newUser = new User({ userId: uuidv4(), email, password });
 
-    const result = await newUser.save();
-
-    return {
-        message: "user saved successfully",
-        result
-    }
+    newUser.save()
+        .then(data => {
+            onSucess(data);
+        }).catch(() => {
+            onError();
+        });
 }
 
 async function FindUser(email, validator) {

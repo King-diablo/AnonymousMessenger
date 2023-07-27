@@ -1,7 +1,6 @@
-const port = 3000;
 
-let isLoggedIn = false;
 
+require('dotenv').config();
 
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -10,7 +9,7 @@ const cookieParser = require('cookie-parser');
 const client = require("./src/config/connection");
 const { userRouter } = require("./src/routes/v1/userRoute");
 const { validateDetail } = require("./src/middleware/validation");
-const { FindUser } = require("./src/controller/userController");
+const { FindUser, CreateUser } = require("./src/controller/userController");
 const { Secure, Compare } = require("./src/helper/password");
 
 
@@ -23,30 +22,38 @@ app.use("/api/v1", userRouter);
 
 client.RunUserDB();
 
-const userInfo = {
-    email: "",
-}
+const port = process.env.PORT;
+const saltRounds = process.env.SALT_ROUNDS;
+let isLoggedIn = false;
 
 app.post("/api/v1/register", validateDetail, async (req, res) => {
     const data = req.body;
 
     const { email, password } = data;
 
-    const status = await Secure(saltRounds, password, onError, onSucess);
+    Secure(saltRounds, password, onError, onSucess);
 
-    function onError() {
+    function onError(err) {
         console.log(err);
         res.status(400).json({ message: err })
     }
 
     function onSucess(hash) {
-        CreateUser(email, hash);
 
-        res.status(201).json({ message: "user created successfully" });
+        const response = {}
+
+        CreateUser(email, hash, onError, onSucess);
+
+        function onError() {
+            response.message = `${email} already exist do you mean to logIn`
+        }
+
+        function onSucess(data) {
+            response.data = data
+        }
+
         SaveSession(res, email);
-    }
-
-    if (status.result) {
+        res.status(201).json({ response });
     }
 });
 
