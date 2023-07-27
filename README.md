@@ -130,6 +130,10 @@ users.
 
   this gets all the messages sent to you and it also hides the sender
   ```
+  ```
+  you can sort messages by using the query "sortBy" which is either newest or oldest
+  ```
+
 * Reporting-Message route
   ```
   "/user/report"
